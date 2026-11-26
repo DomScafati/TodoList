@@ -11,6 +11,7 @@ import Foundation
 final class TodoViewModel {
     private let service: TodoServiceProtocol
     var todos: [Todo]
+    let store = TodoStore()
 
     init(service: TodoServiceProtocol = TodoService(),
          todos: [Todo] = []) {
@@ -20,8 +21,12 @@ final class TodoViewModel {
     
     func getTodos() {
         Task {
+            todos = await store.getAll()
+
             do {
-                todos = try await service.fetchTodos()
+                let fresh = try await service.fetchTodos()
+                await store.replaceAll(with: fresh)
+                todos = await store.getAll()
             } catch {
                 print(error)
             }
@@ -31,8 +36,11 @@ final class TodoViewModel {
     func createTodo(title: String, description: String, isDone: Bool) {
         Task {
             do {
-                _ = try await service.createTodo(title: title, description: description, isDone: isDone)
-                todos = try await service.fetchTodos()
+                let todo = try await service.createTodo(title: title,
+                                                        description: description,
+                                                        isDone: isDone)
+                await store.add(element: todo)
+                todos = await store.getAll()
             } catch {
                 print(error)
             }
@@ -42,8 +50,17 @@ final class TodoViewModel {
     func updateTodo(id: UUID, title: String, description: String, isDone: Bool) {
         Task {
             do {
-                try await service.updateTodo(id: id, title: title, description: description, isDone: isDone)
-                todos = try await service.fetchTodos()
+                try await service.updateTodo(id: id,
+                                             title: title,
+                                             description: description,
+                                             isDone: isDone)
+                let todo = Todo(id: id,
+                                title: title,
+                                description: description,
+                                isDone: isDone)
+                
+                await store.update(element: todo)
+                todos = await store.getAll()
             } catch {
                 print(error)
             }
@@ -54,7 +71,8 @@ final class TodoViewModel {
         Task {
             do {
                 try await service.deleteTodo(id: id)
-                todos.removeAll { $0.id == id }
+                await store.delete(at: id)
+                todos = await store.getAll()
             } catch {
                 print(error)
             }
