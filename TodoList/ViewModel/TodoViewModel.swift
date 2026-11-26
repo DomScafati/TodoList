@@ -10,6 +10,11 @@ import Foundation
 @Observable
 final class TodoViewModel {
     private let service: TodoServiceProtocol
+    var error: Error?
+    var isShowingError: Bool {
+        get { error != nil }
+        set { if !newValue { error = nil } }
+    }
     var todos: [Todo]
     let store = TodoStore()
 
@@ -27,8 +32,8 @@ final class TodoViewModel {
                 let fresh = try await service.fetchTodos()
                 await store.replaceAll(with: fresh)
                 todos = await store.getAll()
-            } catch {
-                print(error)
+            } catch(let todoError) {
+                error = todoError
             }
         }
     }
@@ -41,8 +46,8 @@ final class TodoViewModel {
                                                         isDone: isDone)
                 await store.add(element: todo)
                 todos = await store.getAll()
-            } catch {
-                print(error)
+            } catch(let todoError) {
+                error = todoError
             }
         }
     }
@@ -61,8 +66,8 @@ final class TodoViewModel {
                 
                 await store.update(element: todo)
                 todos = await store.getAll()
-            } catch {
-                print(error)
+            } catch(let todoError) {
+                error = todoError
             }
         }
     }
@@ -73,8 +78,8 @@ final class TodoViewModel {
                 try await service.deleteTodo(id: id)
                 await store.delete(at: id)
                 todos = await store.getAll()
-            } catch {
-                print(error)
+            } catch(let todoError) {
+                error = todoError
             }
         }
     }

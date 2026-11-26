@@ -10,7 +10,7 @@ import SwiftUI
 struct ContentView: View {
     @State var viewModel = TodoViewModel()
     @State private var formMode: TodoFormMode?
-
+    
     var body: some View {
         NavigationStack {
             ScrollView {
@@ -50,6 +50,13 @@ struct ContentView: View {
                         viewModel.deleteTodo(id: todo.id)
                     }
                 }
+            }
+            .alert("An Error Occurred",
+                   isPresented: $viewModel.isShowingError,
+                   presenting: viewModel.error) { _ in
+                Button("OK") {}
+            } message: { error in
+                Text(error.localizedDescription)
             }
         }
     }

@@ -7,11 +7,20 @@
 
 import Foundation
 
-enum TodoError: Error {
+enum TodoError: LocalizedError {
     case invalidURL
     case decodingFailed
     case badStatus
     case unknown
+
+    var errorDescription: String? {
+        switch self {
+        case .invalidURL: "The server address is invalid."
+        case .decodingFailed: "The server sent data the app couldn't read."
+        case .badStatus: "The server couldn't complete the request."
+        case .unknown: "Something went wrong."
+        }
+    }
 }
 
 protocol TodoServiceProtocol {
